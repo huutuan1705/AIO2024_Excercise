@@ -85,3 +85,6 @@ model, metrics = utils.train(
     model, model_name, save_model, optimizer, criterion, train_loader, val_loader,
     num_epochs, device
 )
+
+utils.plot_result(num_epochs, metrics["train_accuracy"], metrics["valid_accuracy"],
+                  metrics["train_loss"], metrics["valid_loss"])
