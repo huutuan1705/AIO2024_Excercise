@@ -14,7 +14,7 @@ import utils
 # !unzip ./flower_photos.zip
 
 # Load data
-data_path = "./flower_photos"
+data_path = "/kaggle/working/flower_photos"
 dataset = ImageFolder(root=data_path)
 num_samples = len(dataset)
 classes = dataset.classes
