@@ -34,7 +34,7 @@ class TransformerEncoder(nn.Module):
 class PatchPositionEmbedding(nn.Module):
     def __init__(self, image_size=224, embed_dim=512, patch_size=16, device='cpu'):
         super().__init__()
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=embed_dim, kernel_size=patch_size, bias=False)
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=embed_dim, kernel_size=patch_size, stride=patch_size, bias=False)
         scale = embed_dim ** -0.5
         self.positional_embedding = nn.Parameter(scale*torch.randn((image_size//patch_size)**2, embed_dim))
         self.device = device
