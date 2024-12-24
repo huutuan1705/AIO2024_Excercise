@@ -61,7 +61,7 @@ class VisionTransformerCls(nn.Module):
     def forward(self, x):
         output = self.embd_layer(x)
         output = self.transform_layer(output, output, output)
-        output = output[:, 0:, :]
+        output = output[:, 0, :]
         output = self.dropout(output)
         output = self.fc1(output)
         output = self.dropout(output)
