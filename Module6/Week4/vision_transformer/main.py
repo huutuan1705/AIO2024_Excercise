@@ -51,7 +51,7 @@ valid_dataset.dataset.transform = train_transform
 test_dataset.dataset.transform = train_transform
 
 # Loader data
-BATCH_SIZE = 512
+BATCH_SIZE = 32
 train_loader = DataLoader(
     train_dataset, shuffle=True, batch_size=BATCH_SIZE
 )
