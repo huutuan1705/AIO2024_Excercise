@@ -1,10 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
-import torchvision.transforms as transforms
-
-import math
-import os
 
 class TransformerEncoder(nn.Module):
     def __init__(self, embed_dim, num_heads, ff_dim, dropput=0.1):
@@ -35,3 +30,41 @@ class TransformerEncoder(nn.Module):
         out_2 = self.layernorm_2(out_1 + ffn_output)
         
         return out_2
+    
+class PatchPositionEmbedding(nn.Module):
+    def __init__(self, image_size=224, embed_dim=512, patch_size=16, device='cpu'):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=embed_dim, kernel_size=patch_size, bias=False)
+        scale = embed_dim ** -0.5
+        self.positional_embedding = nn.Parameter(scale*torch.randn((image_size//patch_size)**2, embed_dim))
+        self.device = device
+    
+    def forward(self, x):
+        x = self.conv1(x) # shape = [*, width, grid, grid]
+        x = x.reshape(x.shape[0], x.shape[1], -1) # shape = [*, width, grid**2]
+        x = x.permute(0, 2, 1) # shape = [*, grid**2, width]
+        
+        x = x + self.positional_embedding.to(self.device)
+        return x
+    
+class VisionTransformerCls(nn.Module):
+    def __init__(self, image_size, embed_dim, num_heads, ff_dim, dropout=0.1, device='cpu', num_classes=10, patch_size=16):
+        super().__init__()
+        self.embd_layer = PatchPositionEmbedding(image_size=image_size, embed_dim=embed_dim,
+                                patch_size=patch_size, device=device)
+        self.transform_layer = TransformerEncoder(embed_dim, num_heads, ff_dim, dropout)
+        self.fc1 = nn.Linear(in_features=embed_dim, out_features=20)
+        self.fc2 = nn.Linear(in_features=20, out_features=num_classes)
+        self.dropout = nn.Dropout(p=dropout)
+        self.relu = nn.ReLU()
+        
+    def forward(self, x):
+        output = self.embd_layer(x)
+        output = self.transform_layer(output, output, output)
+        output = output[:, 0:, :]
+        output = self.dropout(output)
+        output = self.fc1(output)
+        output = self.dropout(output)
+        output = self.fc2(output)
+        
+        return output
