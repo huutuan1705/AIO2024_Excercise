@@ -55,7 +55,7 @@ class TransformerEncoder(nn.Module):
     def __init__(self, src_vocab_size, embed_dim, max_length, num_layers, 
                  num_heads, ff_dim, dropout=0.1, device='cpu'):
         super().__init__()
-        self.embedding = TokenAndPositionEmbedding(src_vocab_size, embed_dim, device)
+        self.embedding = TokenAndPositionEmbedding(src_vocab_size, embed_dim, max_length, device)
         self.layers = nn.ModuleList(
             [
                 TransformerEncoderBlock(
@@ -68,4 +68,26 @@ class TransformerEncoder(nn.Module):
         output = self.embedding(x)
         for layer in self.layers:
             output = layer(output, output, output)
+        return output
+    
+class TransformerEncoderCls(nn.Module):
+    def __init__(self, vocab_size, max_length, num_layers, embed_dim, 
+                 num_heads, ff_dim, dropout=0.1, device='cpu'):
+        super().__init__()
+        self.encoder = TransformerEncoder(vocab_size, embed_dim, max_length, num_layers,
+                                          num_heads, ff_dim, dropout, device)
+        self.pooling = nn.AvgPool1d(kernel_size=max_length)
+        self.fc1 = nn.Linear(in_features=embed_dim, out_features=ff_dim, bias=True)
+        self.fc2 = nn.Linear(in_features=ff_dim, out_features=embed_dim, bias=True)
+        self.dropout = nn.Dropout(p=dropout)
+        self.relu = nn.ReLU()
+        
+    def forward(self, x):
+        output = self.encoder(x)
+        output = self.pooling(output.permute(0, 2, 1)).squeeze()
+        output = self.dropout(output)
+        output = self.fc1(output)
+        output = self.dropout(output)
+        output = self.fc2(output)
+        
         return output

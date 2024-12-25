@@ -1,6 +1,9 @@
 import time
+import re
+import string
 import torch
 import matplotlib.pyplot as plt
+
 from tqdm import tqdm
 
 def train_epoch(model, optimizer, criterion, train_dataloader, device, epoch=0, log_interval=50):
@@ -106,6 +109,49 @@ def train(model, model_name, save_model, optimizer, criterion, train_dataloader,
     
     return model, metrics   
 
+def preprocess_text(text):
+    # Remove URLs
+    url_pattern = re.compile(r'https?://\s+\wwww\.\s+')
+    text = url_pattern.sub(r" ", text)
+    
+    # Remove HTML Tags: <>
+    html_pattern = re.compile(r'<[^<>]+>')
+    text = html_pattern.sub(" ", text)
+
+    # Remove puncs and digits
+    replace_chars = list(string.punctuation + string.digits)
+    for char in replace_chars:
+        text = text.replace(char, " ")
+        
+    # Remove emoji
+    emoji_pattern = re.compile( "["
+        u"\U0001F600-\U0001F64F" # emoticons
+        u"\U0001F300-\U0001F5FF" # symbols & pictographs
+        u"\U0001F680-\U0001F6FF" # transport & map symbols
+        u"\U0001F1E0-\U0001F1FF" # flags (iOS)
+        u"\U0001F1F2-\U0001F1F4" # Macau flag
+        u"\U0001F1E6-\U0001F1FF" # flags
+        u"\U0001F600-\U0001F64F"
+        u"\U00002702-\U000027B0"
+        u"\U000024C2-\U0001F251"
+        u"\U0001f926-\U0001f937"
+        u"\U0001F1F2"
+        u"\U0001F1F4"
+        u"\U0001F620"
+        u"\u200d"
+        u"\u2640-\u2642 "
+        "]+" , flags = re.UNICODE 
+    )
+
+    text = emoji_pattern.sub(r" ", text)
+    
+    # normalize whitespace
+    text = " ".join(text.split())
+    
+    # lowercasing
+    text = text.lower()
+    return text
+
 def plot_result(num_epochs, train_accs, eval_accs, train_losses, eval_losses):
     epochs = len(range(num_epochs))
     fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
@@ -118,3 +164,27 @@ def plot_result(num_epochs, train_accs, eval_accs, train_losses, eval_losses):
     axs[0].set_ylabel("Accuracy")
     axs[1].set_ylabel("Loss")
     plt.legend()
+    plt.show()
+    
+def yeild_tokens(sentences, tokenizer):
+    for sentence in sentences:
+        yield tokenizer(sentence)
+
+def prepare_dataset(df, vocabulary, tokenizer):
+    for row in df:
+        sentence = row['preprocessed_sentence']
+        encoded_sentence = vocabulary(tokenizer(sentence))
+        label = row['label']
+        yield encoded_sentence, label
+        
+def collate_batch(batch, seq_length=100):
+    # create inputs, offsets, labels for batch
+    sentences, labels = list(zip(*batch))
+    encoded_sentences = [
+        sentence + ([0]*(seq_length-len(sentence))) if len(sentence) < seq_length else sentence[:seq_length] for sentence in sentences
+    ]
+    
+    encoded_sentences = torch.tensor(encoded_sentences, dtype=torch.int64)
+    labels = torch.tensor(labels)
+    
+    return encoded_sentences, labels
