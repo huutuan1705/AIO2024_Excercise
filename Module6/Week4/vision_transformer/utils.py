@@ -26,15 +26,15 @@ def train_epoch(model, optimizer, criterion, train_dataloader, device, epoch=0, 
         total_acc += (predictions.argmax(1) == labels).sum().item()
         total_count += labels.size(0)
         
-        if idx%log_interval == 0 and idx > 0:
-            elapsed = time.time() - start_time
-            print(
-                "Epoch {:3d} | {:5d}/{:5d} batches "
-                "| accuracy {:8.3f}".format(epoch, idx, len(train_dataloader), total_acc/total_count)
-            )
+        # if idx%log_interval == 0 and idx > 0:
+        #     elapsed = time.time() - start_time
+        #     print(
+        #         "Epoch {:3d} | {:5d}/{:5d} batches "
+        #         "| accuracy {:8.3f}".format(epoch, idx, len(train_dataloader), total_acc/total_count)
+        #     )
     
-            total_acc, total_count = 0, 0
-            start_time = time.time()
+        #     total_acc, total_count = 0, 0
+        #     start_time = time.time()
         
     epoch_acc = total_acc / total_count
     epoch_loss = sum(losses) / len(losses)
