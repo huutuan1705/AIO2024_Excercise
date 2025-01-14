@@ -1,3 +1,0 @@
-Em có một câu hỏi ạ. Em đang có 1 bài toán phân loại dựa trên 2 ảnh. Ví dụ như là để phân loại 1 bệnh trên cây trồng thì cần 1 ảnh chụp lá và chụp rễ thì mới phát hiện được bệnh. Em có 2 câu hỏi ạ:
-1. Bài toán này có thể tổ chức data để tải lên như thế nào ạ.
-2. Ý tưởng để em giải quyết bài toán này là đưa 2 ảnh vào 2 mạng CNN giống nhau nhưng độc lập, rồi lấy một feature nào đó trong mỗi mạng để kết hợp với nhau. Em muốn hỏi là tưởng này có khả thi không ạ
